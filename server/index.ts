@@ -12,13 +12,22 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const app = express();
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : undefined });
+const PUBLIC_ORIGIN = (process.env.APP_ORIGIN ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+  (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : '')
+).replace(/\/$/, '');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSL === 'true' || Boolean(process.env.VERCEL) ? { rejectUnauthorized: false } : undefined,
+  max: 5,
+  idleTimeoutMillis: 10_000,
+  connectionTimeoutMillis: 10_000,
+});
 const SECRET = process.env.SESSION_SECRET;
 if (!SECRET || SECRET.length < 32) throw new Error('SESSION_SECRET must be set to at least 32 characters.');
-if (process.env.NODE_ENV === 'production' && !PUBLIC_ORIGIN) throw new Error('Set APP_ORIGIN or ensure Render provides RENDER_EXTERNAL_HOSTNAME in production.');
+if (process.env.NODE_ENV === 'production' && !PUBLIC_ORIGIN) throw new Error('Set APP_ORIGIN or ensure the hosting provider supplies its public hostname.');
 const PORT = Number(process.env.PORT || 4000);
 const COOKIE = 'glory_session';
-const PUBLIC_ORIGIN = (process.env.APP_ORIGIN || (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : '')).replace(/\/$/, '');
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
 const cookieOptions = { httpOnly: true, secure: process.env.COOKIE_SECURE === 'true', sameSite: 'lax' as const, path: '/', maxAge: 7 * 24 * 60 * 60 * 1000 };
 
@@ -107,5 +116,13 @@ app.post('/api/team/accept',asyncRoute(async(req,res)=>{const p=z.object({token:
 
 app.use((err:any,_req:Request,res:Response,_next:NextFunction)=>{console.error(err);res.status(500).json({error:'An unexpected server error occurred.'});});
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
-if(process.env.NODE_ENV==='production'){app.use(express.static(path.resolve(__dirname,'../dist')));app.get('*',(_req,res)=>res.sendFile(path.resolve(__dirname,'../dist/index.html')));}
-app.listen(PORT,()=>console.log(`Glory Dashboard API listening on :${PORT}`));
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+  app.use(express.static(path.resolve(__dirname, '../dist')));
+  app.get('*', (_req, res) => res.sendFile(path.resolve(__dirname, '../dist/index.html')));
+}
+
+// Vercel imports this Express app as a serverless function. Other hosts run it as a server.
+export default app;
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => console.log(`Glory Dashboard API listening on :${PORT}`));
+}
