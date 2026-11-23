@@ -4,7 +4,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/[...all].ts": {
+    "api/*.ts": {
+      "includeFiles": "server/**"
+    },
+    "api/**/*.ts": {
       "includeFiles": "server/**"
     }
   }
