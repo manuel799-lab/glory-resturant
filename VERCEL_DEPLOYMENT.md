@@ -1,26 +1,41 @@
-# Vercel deployment notes
+# Vercel deployment
 
-This project uses a Vite-built React frontend, an Express API exposed through a Vercel catch-all function, and PostgreSQL.
+This project uses a Vite-built React frontend and an Express backend. Vercel deploys the Express app as one Node.js function.
 
-## Required Vercel environment variables
+## Vercel project settings
 
-- `NODE_ENV=production`
-- `SESSION_SECRET` = a private random value of at least 32 characters
-- `DATABASE_URL` = PostgreSQL connection string from the chosen database provider
-- `PGSSL=true`
-- `COOKIE_SECURE=true`
-- `APP_ORIGIN` = the deployed site's canonical HTTPS origin (for example, `https://your-project.vercel.app`)
+- Framework Preset: **Express** (not Vite)
+- Root Directory: `./`
+- Build Command: `npm run build`
+- Output Directory: leave at the framework default; do not override it to `dist`
+- Node.js: use a supported current LTS version
 
-Do not commit real secrets or database credentials to GitHub.
+The Vite build writes static frontend files to `public/`, which Vercel serves through its CDN. The root `server.ts` is the Express entry point. Do not add an `api/` catch-all wrapper; Vercel detects and deploys the Express app directly.
 
-## Database setup
+## Required production environment variables
 
-Create a PostgreSQL database with your chosen provider. Run `npm run db:migrate` once against that database using the provider's connection string, or execute `db/schema.sql` in the provider's SQL editor. Vercel functions do not run migrations automatically.
+Set these in Vercel → Project → Settings → Environment Variables:
 
-## Deployment
+- `DATABASE_URL`: Neon PostgreSQL connection string
+- `SESSION_SECRET`: private random value of at least 32 characters
+- `COOKIE_SECURE`: `true`
+- `APP_ORIGIN`: exact production URL, for example `https://glory-resturant-45bs.vercel.app`
+- `PGSSL`: `true` (the app also enables SSL automatically on Vercel)
 
-Import the repository into Vercel with the project root as the Root Directory. The build command is `npm run build` and the output directory is `dist`. Add the environment variables above before deploying.
+Apply them to the **Production** environment. Do not expose secrets in frontend-prefixed variables or commit them to GitHub.
 
-## Important
+`APP_ORIGIN` must match the browser's address exactly, including `https://` and without a trailing slash. It is used to validate requests that change data and to set the allowed origin.
 
-The first deployment should be treated as a staging deployment. Verify registration, login, logout, session persistence, creating and editing records, tenant isolation, team invitations, and database health before inviting real customers. A successful frontend build alone does not prove that the API or database works.
+## Database
+
+The production Neon database must have the tables in `db/schema.sql`. Run that schema once in the Neon SQL Editor before registration. The `/api/health` endpoint runs `SELECT 1`, so it confirms the database connection, not that every table exists.
+
+## First verification
+
+1. Open `/api/health` on the production domain. Expected response: `{"ok":true,"database":"connected"}`.
+2. Register a test business using an email not already registered.
+3. Sign out and sign back in.
+4. Create one test expense and one test sale.
+5. Register a second test business in a separate browser session and verify it cannot see the first business's records.
+
+Do not use real business data until registration, login, CRUD, and tenant-isolation checks pass. This baseline is not a security certification.

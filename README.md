@@ -32,7 +32,7 @@ For production, run `npm run build`, set `NODE_ENV=production`, configure HTTPS,
 
 ## Deploying
 
-Deploy this repository to a Node.js host that supports a persistent PostgreSQL connection. Add all `.env.example` values as host environment variables. Apply `db/schema.sql` once to the production database before starting the app. Do not expose `DATABASE_URL` or `SESSION_SECRET` in frontend build-time variables.
+Deploy this repository to a Node.js host that supports PostgreSQL. Add the `.env.example` values as server environment variables. Apply `db/schema.sql` once to the production database before starting the app. Do not expose `DATABASE_URL` or `SESSION_SECRET` in frontend build-time variables.
 
 ## Important security and product notes
 
@@ -77,3 +77,8 @@ To prepare deployment:
 5. Before entering real business or financial data, upgrade PostgreSQL to a paid plan with backups. Render's free PostgreSQL databases are limited to 1 GB, have no backups, and expire after 30 days. Free web services also spin down after 15 minutes of inactivity.
 
 The Blueprint sets `autoDeploy: false` so later Git pushes do not automatically replace the running app without an intentional deploy.
+
+
+## Vercel deployment
+
+For Vercel, use the root `server.ts` Express entry point. Vite builds the frontend into `public/`, which Vercel serves as static assets. Select the Express Framework Preset and follow `VERCEL_DEPLOYMENT.md`. Do not recreate an `api/` catch-all function.

@@ -12,6 +12,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const app = express();
+// Vercel terminates HTTPS and forwards requests through its proxy.
+app.set('trust proxy', 1);
 const PUBLIC_ORIGIN = (process.env.APP_ORIGIN ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
   (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : '')
@@ -117,8 +119,8 @@ app.post('/api/team/accept',asyncRoute(async(req,res)=>{const p=z.object({token:
 app.use((err:any,_req:Request,res:Response,_next:NextFunction)=>{console.error(err);res.status(500).json({error:'An unexpected server error occurred.'});});
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-  app.use(express.static(path.resolve(__dirname, '../dist')));
-  app.get('*', (_req, res) => res.sendFile(path.resolve(__dirname, '../dist/index.html')));
+  app.use(express.static(path.resolve(__dirname, '../public')));
+  app.get('*', (_req, res) => res.sendFile(path.resolve(__dirname, '../public/index.html')));
 }
 
 // Vercel imports this Express app as a serverless function. Other hosts run it as a server.
