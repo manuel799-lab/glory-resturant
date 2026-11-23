@@ -82,3 +82,8 @@ The Blueprint sets `autoDeploy: false` so later Git pushes do not automatically 
 ## Vercel deployment
 
 For Vercel, use the root `server.ts` Express entry point. Vite builds the frontend into `public/`, which Vercel serves as static assets. Select the Express Framework Preset and follow `VERCEL_DEPLOYMENT.md`. Do not recreate an `api/` catch-all function.
+
+
+## Vercel deployment
+
+For Vercel, use the Vite framework preset and the `public` output directory. The frontend is served as static files and `api/[...all].ts` exposes the Express API. Follow `VERCEL_DEPLOYMENT.md` for environment variables and verification.

@@ -1,16 +1,22 @@
 # Vercel deployment
 
-This project uses a Vite-built React frontend and an Express backend. Vercel deploys the Express app as one Node.js function.
+This project deploys the React/Vite frontend as static files and the Express backend as a Vercel Function.
 
 ## Vercel project settings
 
-- Framework Preset: **Express** (not Vite)
+- Framework Preset: **Vite**
 - Root Directory: `./`
 - Build Command: `npm run build`
-- Output Directory: leave at the framework default; do not override it to `dist`
-- Node.js: use a supported current LTS version
+- Output Directory: `public` (the `vercel.json` file sets this)
+- Do not use the Express framework preset for this configuration.
 
-The Vite build writes static frontend files to `public/`, which Vercel serves through its CDN. The root `server.ts` is the Express entry point. Do not add an `api/` catch-all wrapper; Vercel detects and deploys the Express app directly.
+## Project structure
+
+- `src/` contains the React frontend.
+- `server/index.ts` contains the Express API.
+- `api/[...all].ts` exports the Express API as a Vercel Function.
+- Vite builds the frontend into `public/`, which Vercel serves as static files.
+- Do not delete the `api/` folder or `api/[...all].ts`.
 
 ## Required production environment variables
 
@@ -20,7 +26,7 @@ Set these in Vercel → Project → Settings → Environment Variables:
 - `SESSION_SECRET`: private random value of at least 32 characters
 - `COOKIE_SECURE`: `true`
 - `APP_ORIGIN`: exact production URL, for example `https://glory-resturant-45bs.vercel.app`
-- `PGSSL`: `true` (the app also enables SSL automatically on Vercel)
+- `PGSSL`: `true`
 
 Apply them to the **Production** environment. Do not expose secrets in frontend-prefixed variables or commit them to GitHub.
 

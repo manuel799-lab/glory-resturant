@@ -1,6 +1,3 @@
-import express from 'express';
-import app from './server/index.ts';
-
-// Vercel detects Express from this root entry point and deploys the app as one function.
-void express;
-export default app;
+// This project uses Vite for the frontend and api/[...all].ts for the backend.
+// This file is intentionally not an Express entry point.
+export {};
