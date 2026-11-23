@@ -45,3 +45,8 @@ The production Neon database must have the tables in `db/schema.sql`. Run that s
 5. Register a second test business in a separate browser session and verify it cannot see the first business's records.
 
 Do not use real business data until registration, login, CRUD, and tenant-isolation checks pass. This baseline is not a security certification.
+
+
+### Explicit API function routes
+
+Authentication endpoints now have explicit Vercel function entry points under `api/auth/` (register, login, logout, and me), with explicit entry points for health, bootstrap, records, business, and team routes. The existing catch-all remains as a fallback for parameterized routes. Keep `vercel.json` configured to include `server/**` in the API functions.
